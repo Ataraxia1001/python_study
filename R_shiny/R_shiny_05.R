@@ -1,19 +1,25 @@
-load("./04_preprocess/04_preprocess.rdata")
-apt_juso <- data.frame(apt_price$juso_jubun)
-apt_juso <- data.frame(apt_juso[!duplicated(apt_juso), ]) # unique 주소 추출
-head(apt_juso, 2)
+load( "./04_preprocess/04_preprocess.rdata")  # 실거래 불러오기          
+apt_juso <- data.frame(apt_price$juso_jibun)  # 주소컬럼만 추출
+apt_juso <- data.frame(apt_juso[!duplicated(apt_juso), ]) # unique 주소 추출 
+head(apt_juso, 2)   # 추출결과 확인
 
-# 주소를 좌표로 변환하는 지오코딩
-add_list <- list() 
-cnt <- 0
-# 주의! 키변수는 반드시 지우고 git hub에 올리시오!!!!!
-kakao_key = ""
-install.packages('httr')
-install.packages("RJSONIO")
-library(httr)
-library(RJSONIO)
-library(data.table)
-library(dplyr)
+
+#---------------------------------------
+# 5-2 주소를 좌표로 변환하는 지오코딩
+#---------------------------------------
+
+#---# [1단계: 지오코딩 준비]
+
+add_list <- list()   # 빈 리스트 생성
+cnt <- 0             # 반복문 카운팅 초기값 설정
+kakao_key = ""       # 인증키
+
+#---# [2단계: 지오코딩]
+
+library(httr)        # install.packages('httr')
+library(RJSONIO)     # install.packages('RJSONIO')
+library(data.table)  # install.packages('data.table')
+library(dplyr)       # install.packages('dplyr')
 
 for(i in 1:nrow(apt_juso)){ 
   #---# 에러 예외처리 구문 시작
@@ -38,28 +44,15 @@ for(i in 1:nrow(apt_juso)){
       cat(message, "\n\n")
       #---# 예외처리 구문 종료
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")}
-)
+  )
 }
 
-# 3단계 지오코딩 결과 저장
-juso_geocoding <- rbindlist(add_list)
-juso_geocoding$coord_x <- as.numeric(juso_geocoding$coord_x)
+#---# [3단계: 지오 코딩 결과 저장]
+
+juso_geocoding <- rbindlist(add_list)   # 리스트를 데이터프레임 변환
+juso_geocoding$coord_x <- as.numeric(juso_geocoding$coord_x) # 좌표값 숫자형 변환
 juso_geocoding$coord_y <- as.numeric(juso_geocoding$coord_y)
-juso_geocoding <- na.omit(juso_geocoding) #결측치 제거
-dir.create("./05_geocoding")
-save(juso_geocoding, file="./05_geocoding/05_juso_geocoding.rdata")
+juso_geocoding <- na.omit(juso_geocoding)   # 결측치 제거
+dir.create("./05_geocoding")   # 새로운 폴더 생성
+save(juso_geocoding, file="./05_geocoding/05_juso_geocoding.rdata") # 저장
 write.csv(juso_geocoding, "./05_geocoding/05_juso_geocoding.csv")
-
-
-
-inputs <- list(1,2,3, 'four', 5,6)
-for(input in inputs){
-  print(paste(input, "의 로그값은 =>", log(input)))
-}
-
-for(input in inputs) {
-  tryCatch({
-    print(paste(input, "의 로그값은 =>", log(input)))
-  }, error = function(e){cat("Error: ", conditionMessage(e), "\n")} )}
-
-
